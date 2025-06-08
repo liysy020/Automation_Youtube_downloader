@@ -4,7 +4,7 @@ from .forms import FileDBForm
 import ipcalc
 
 def local(ip='0'):
-	localnetwork = ['172.27.1.0/24','10.1.1.0/24','10.1.2.0/24']
+	localnetwork = ['10.0.0.0/8','172.16.0.0/12','192.168.0.0/16']
 	if ip != '0':
 		for subnet in localnetwork:
 			if ip in ipcalc.Network(subnet):

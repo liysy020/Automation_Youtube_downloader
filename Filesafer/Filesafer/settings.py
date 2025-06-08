@@ -132,8 +132,7 @@ MEDIA_URL = '/files/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOG = False
-if LOG: #turn on debug
+if DEBUG: #turn on debug
     LOGGING = {
         'version': 1,
         'disable_existing_loggers': False,

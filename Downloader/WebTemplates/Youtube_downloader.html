@@ -15,13 +15,27 @@
 {% endif %}
 
 {% if download_ready %}
-    <h3>Downloading: {{ video_title }}...</h3>
+    <h3 id="download-status">Downloading: {{ video_title }}...</h3>
+
     <script>
-        // Automatically redirect to the download_complete view after a short delay
+        // Create a temporary link element
+        var link = document.createElement('a');
+        link.href = "{% url 'serve_download' %}";
+        link.download = "{{ video_title }}"; // Set the download attribute with the video title
+
+        // Append the link to the document body
+        document.body.appendChild(link);
+
+        // Programmatically click the link to trigger the download
+        link.click();
+
+        // Remove the link from the document after triggering the download
+        document.body.removeChild(link);
+
+        // Update the download status after a short delay
         setTimeout(function() {
-            window.location.href = "{% url 'serve_download' %}";
-        }, 2000);  // 2-second delay
+            document.getElementById("download-status").innerText = "Download completed!";
+        }, 20000); // Adjust the delay as needed
     </script>
 {% endif %}
-
 {% endblock%}

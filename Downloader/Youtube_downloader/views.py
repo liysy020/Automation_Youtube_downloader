@@ -137,7 +137,6 @@ class DeletableFileResponse(FileResponse):
         super().close()
         try:
             os.remove(self.filepath)
-            logger.debug(f"Deleted file: {self.filepath}")
         except Exception as e:
             logger.debug(f"Error deleting file: {e}")
 

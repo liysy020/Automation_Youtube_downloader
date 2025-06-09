@@ -128,17 +128,26 @@ def download_youtube(request):
                     return HttpResponse(f"An error occurred: {e}", status=500)
     return render(request, 'Youtube_downloader.html',{ 'input_url': YouTubeURLForm(), 'user_auth': True})
 
+class DeletableFileResponse(FileResponse):
+    def __init__(self, file, filepath, *args, **kwargs):
+        self.filepath = filepath
+        super().__init__(file, *args, **kwargs)
+
+    def close(self):
+        super().close()
+        try:
+            os.remove(self.filepath)
+            logger.debug(f"Deleted file: {self.filepath}")
+        except Exception as e:
+            logger.debug(f"Error deleting file: {e}")
+
 def serve_download(request):
     filepath = request.session.get('downloaded_filepath')
-    print (filepath)
     if not filepath or not os.path.exists(filepath):
         raise Http404("File not found or download not ready.")
-
     filename = os.path.basename(filepath)
-    response = FileResponse(open(filepath, 'rb'), as_attachment=True, filename=filename)
-
-    os.remove(filepath)
-    del request.session['downloaded_filepath']
-    del request.session['video_title']
-
+    response = DeletableFileResponse(open(filepath, 'rb'), filepath, as_attachment=True, filename=filename)
+    # Clean up session data immediately (safe)
+    request.session.pop('downloaded_filepath', None)
+    request.session.pop('video_title', None)
     return response

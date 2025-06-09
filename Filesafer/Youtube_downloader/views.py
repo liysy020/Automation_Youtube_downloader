@@ -34,7 +34,7 @@ def download_youtube(request):
         if form.is_valid():
             input_url = form.cleaned_data["url"]
             action = request.POST.get('action')
-            if action == 'video': #download MP4
+            if 'video' in action: #download MP4
                 try:
                     with YoutubeDL({'quiet': True}) as ydl:
                         info_dict = ydl.extract_info(input_url, download=False)
@@ -43,12 +43,39 @@ def download_youtube(request):
                     output_template = f'/tmp/{safe_title}.%(ext)s'
                     filepath = f"/tmp/{safe_title}.mp4"
                     
-                    ydl_opts = {
-                        'quiet': True, 
-                        'format': 'bestvideo[height<=1080]+bestaudio/best', #download 1080p HD video
-                        'merge_output_format': 'mp4',
-                        'outtmpl': output_template,
-                    }
+                    if '480' in action:
+                        ydl_opts = {
+                            'format': 'bestvideo[height<=480]+bestaudio/best/best[height<=480]',
+                            'merge_output_format': 'mp4',
+                            'outtmpl': output_template,
+                            'postprocessors': [
+                                {
+                                    'key': 'FFmpegVideoConvertor',
+                                    'preferedformat': 'mp4',
+                                },
+                            ],
+                            'postprocessor_args': [
+                                '-vf', 'scale=640:480',      # Resize to iPod
+                                '-r', '30',                  # Frame rate
+                                '-vcodec', 'libx264',        # H.264 codec
+                                '-profile:v', 'baseline',        # for ipod touch
+                                '-level', '3.0',
+                                '-b:v', '1500k',              # Video bitrate
+                                '-acodec', 'aac',
+                                '-b:a', '128k',              # Audio bitrate
+                                '-ar', '44100',
+                                '-ac', '2'
+                            ],
+                            'quiet': False,
+                            'verbose': True,
+                        }
+                    else:
+                        ydl_opts = {
+                            'quiet': True, 
+                            'format': 'bestvideo[height<=1080]+bestaudio/best', #download 1080p HD video
+                            'merge_output_format': 'mp4',
+                            'outtmpl': output_template,
+                        }
                     with YoutubeDL(ydl_opts) as ydl:
                         ydl.download([input_url])
                     # Save path and title to session

@@ -16,13 +16,13 @@ def local(ip='0'): #bypass authentication if request is from local network
                 return True
     return False
 def sanitize_filename(title, max_length=40):
-    # Normalize and remove non-ASCII characters
-    title = unicodedata.normalize('NFKD', title).encode('ascii', 'ignore').decode('ascii')
-    # Remove non-word characters (keep alphanumeric, dash, underscore)
-    title = re.sub(r'[^\w\-_. ]', '', title)
+    # Normalize to NFKC form (standardizes characters without removing non-ASCII)
+    title = unicodedata.normalize('NFKC', title)
+    # Remove unsafe characters (preserves Chinese/Unicode word characters)
+    title = re.sub(r'[^\w\s_.-]', '', title, flags=re.UNICODE)
     # Replace spaces with underscores
     title = re.sub(r'\s+', '_', title)
-    # Truncate if too long
+    # Truncate and clean edges
     return title[:max_length].strip('_')
 
 def download_youtube(request):
@@ -68,6 +68,13 @@ def download_youtube(request):
                             ],
                             'quiet': False,
                             'verbose': True,
+                        }
+                    elif '720' in action:
+                        ydl_opts = {
+                            'quiet': True,
+                            'format': 'bestvideo[height<=720]+bestaudio/best',  # download 720p video
+                            'merge_output_format': 'mp4',
+                            'outtmpl': output_template,
                         }
                     else:
                         ydl_opts = {

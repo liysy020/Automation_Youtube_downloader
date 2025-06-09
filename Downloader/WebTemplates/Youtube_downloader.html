@@ -1,0 +1,26 @@
+{% extends 'home.html' %}
+{% block content%}
+<h2>Youtube Downloader</h2>
+<br>
+{% if input_url %}
+<form method="post">
+    {% csrf_token %}
+    {{ input_url.as_p }}
+    <button class="btn btn-primary" type="submit" name="action" value = 'video'>Download HD Video</button>
+    <button class="btn btn-primary" type="submit" name="action" value = 'mp3'>Download MP3</button>
+    <p>
+    <button class="btn btn-primary" type="submit" name="action" value = 'video_480'>iPod Video</button>
+</form>
+{% endif %}
+
+{% if download_ready %}
+    <h3>Downloading: {{ video_title }}...</h3>
+    <script>
+        // Automatically redirect to the download_complete view after a short delay
+        setTimeout(function() {
+            window.location.href = "{% url 'serve_download' %}";
+        }, 2000);  // 2-second delay
+    </script>
+{% endif %}
+
+{% endblock%}

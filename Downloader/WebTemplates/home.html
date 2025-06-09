@@ -1,0 +1,41 @@
+<!doctype html>
+{% load static %}
+<html>
+<head>
+<title> File Exchange</title>
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}" >
+
+</head>
+<body>
+
+    <div class="container">
+      <div class="row title" style = "background-image: url({%static 'css/header-logo.png'%}); background-repeat:no-repeat; background-position: top left; background-size: 180px 180px;">
+        <h1 style="text-align:right"> Automation</h1>
+          <div id="user_auth" class="text-right">
+          {% if user_auth %}
+            <a class="btn btn-primary" href = "/logout/?next=/login">Logout</a>
+          {% else %}
+            <a class="btn btn-primary" href = "/login/?next=/storage/list">Login</a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="row">
+        <div class="sidebar col-md-3">
+          <div class="list-opt-title">
+            <label class="list-sub-opt" >My Applications</label>
+            <div class="list-sub-opt"><a class="list-opt-a" href="/storage/list">File Storage</a></div>
+            <div class="list-sub-opt"><a class="list-opt-a" href="/youtube_downloader">Youtube Downloader</a></div>
+          </div>
+          
+        </div>
+        <div class="container col-md-9">
+          {% block content%}
+          {% endblock%}
+        </div>
+      </div>
+    
+    </div>
+</body>
+</html>

@@ -3,18 +3,23 @@ from django.http import FileResponse, Http404
 from .forms import YouTubeURLForm
 from yt_dlp import YoutubeDL
 import re, os, logging
-import unicodedata
-import ipcalc
+import ipcalc, unicodedata, urllib.parse
+
 
 logger = logging.getLogger('Youtube_downloader_log')
                            
-def local(ip='0'): #bypass authentication if request is from local network
+def local(request): #bypass authentication if request is from local network
     localnetwork = ['10.0.0.0/8','172.16.0.0/12','192.168.0.0/16']
-    if ip != '0':
-        for subnet in localnetwork:
-            if ip in ipcalc.Network(subnet):
-                return True
+    x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR") # get original IP if running Nginx as reverse proxy
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(",")[0].strip()  
+    else:
+        ip = request.META.get("REMOTE_ADDR") # get IP if running Django as web server
+    for subnet in localnetwork:
+        if ip in ipcalc.Network(subnet):
+            return True
     return False
+
 def sanitize_filename(title, max_length=40):
     # Normalize to NFKC form (standardizes characters without removing non-ASCII)
     title = unicodedata.normalize('NFKC', title)
@@ -25,18 +30,27 @@ def sanitize_filename(title, max_length=40):
     # Truncate and clean edges
     return title[:max_length].strip('_')
 
+def sanitize_youtube_url(url):
+    """Removes playlist and other extra params to force single video download"""
+    parsed_url = urllib.parse.urlparse(url)
+    query = urllib.parse.parse_qs(parsed_url.query)
+    video_id = query.get("v", [None])[0]
+    if video_id:
+        return f"https://www.youtube.com/watch?v={video_id}"
+    return url
+
 def download_youtube(request):
     if request.user.is_authenticated != True:
-        if not local(request.META.get('REMOTE_ADDR')):
+        if not local(request):
             return redirect ('/login/?next=/youtube_downloader')
     if request.method == 'POST':
         form = YouTubeURLForm(request.POST)
         if form.is_valid():
-            input_url = form.cleaned_data["url"]
+            input_url = sanitize_youtube_url(form.cleaned_data["url"])
             action = request.POST.get('action')
             if 'video' in action: #download MP4
                 try:
-                    with YoutubeDL({'quiet': True}) as ydl:
+                    with YoutubeDL({'quiet': True}) as ydl: #set quiet to False for debug
                         info_dict = ydl.extract_info(input_url, download=False)
                         raw_title = info_dict.get('title', 'Video')
                         safe_title = sanitize_filename(raw_title)
@@ -66,22 +80,33 @@ def download_youtube(request):
                                 '-ar', '44100',
                                 '-ac', '2'
                             ],
-                            'quiet': False,
+                            'quiet': True,
                             'verbose': True,
+                            'noplaylist': True,
+                            'user_agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+                                        '(KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36',
                         }
                     elif '720' in action:
                         ydl_opts = {
                             'quiet': True,
+                            'verbose': True,
+                            'noplaylist': True,
                             'format': 'bestvideo[height<=720]+bestaudio/best',  # download 720p video
                             'merge_output_format': 'mp4',
                             'outtmpl': output_template,
+                            'user_agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+                                        '(KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36',
                         }
                     else:
                         ydl_opts = {
                             'quiet': True, 
+                            'verbose': True,
+                            'noplaylist': True,
                             'format': 'bestvideo[height<=1080]+bestaudio/best', #download 1080p HD video
                             'merge_output_format': 'mp4',
                             'outtmpl': output_template,
+                            'user_agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+                                        '(KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36',
                         }
                     with YoutubeDL(ydl_opts) as ydl:
                         ydl.download([input_url])

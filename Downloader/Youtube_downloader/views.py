@@ -60,7 +60,7 @@ def download_youtube(request):
                         ydl_opts = {
                             'quiet': True, 
                             'noplaylist': True,
-                            'format': 'bestvideo[height<=1080]+bestaudio/best', #download 1080p HD video
+                            'format': 'bestvideo[height=1080][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height=1080]+bestaudio/best[height<=1080]', #download 1080p HD video
                             'merge_output_format': 'mp4',
                             'outtmpl': output_template,
                             'user_agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '

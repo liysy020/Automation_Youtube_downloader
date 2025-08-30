@@ -6,11 +6,10 @@
 <form method="post">
     {% csrf_token %}
     {{ input_url.as_p }}
-    <p><button class="btn btn-primary" type="submit" name="action" value = 'video'>Download HD Video</button>
-    <button class="btn btn-primary" type="submit" name="action" value = 'mp3'>Download MP3</button>
-    </p>
+    <p><button class="btn btn-primary" type="submit" name="action" value = 'video'>Download HD Video</button></p>
     <p><button class="btn btn-primary" type="submit" name="action" value = 'video_720'>Download Clear Video</button></p>
-    <p><button class="btn btn-primary" type="submit" name="action" value = 'video_480'>iPod Video</button></p>
+    <p><button class="btn btn-primary" type="submit" name="action" value = 'video_480'>Download iPod Video</button></p>
+    <P><button class="btn btn-primary" type="submit" name="action" value = 'mp3'>Download MP3</button></p>
 </form>
 {% endif %}
 

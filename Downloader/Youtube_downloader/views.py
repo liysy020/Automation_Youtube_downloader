@@ -7,7 +7,7 @@ import ipcalc, unicodedata, urllib.parse
 
 
 logger = logging.getLogger('Youtube_downloader_log')
-                           
+
 def local(request): #bypass authentication if request is from local network
     localnetwork = ['10.0.0.0/8','172.16.0.0/12','192.168.0.0/16']
     x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR") # get original IP if running Nginx as reverse proxy
@@ -56,8 +56,27 @@ def download_youtube(request):
                         safe_title = sanitize_filename(raw_title)
                     output_template = f'/tmp/{safe_title}.%(ext)s'
                     filepath = f"/tmp/{safe_title}.mp4"
-                    
-                    if '480' in action:
+                    if '1080' in action:
+                        ydl_opts = {
+                            'quiet': True, 
+                            'noplaylist': True,
+                            'format': 'bestvideo[height<=1080]+bestaudio/best', #download 1080p HD video
+                            'merge_output_format': 'mp4',
+                            'outtmpl': output_template,
+                            'user_agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+                                        '(KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36',
+                        }
+                    elif '720' in action:
+                        ydl_opts = {
+                            'quiet': True,
+                            'noplaylist': True,
+                            'format': 'bestvideo[height<=720]+bestaudio/best',  # download 720p video
+                            'merge_output_format': 'mp4',
+                            'outtmpl': output_template,
+                            'user_agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+                                        '(KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36',
+                        }
+                    elif '480' in action:
                         ydl_opts = {
                             'format': 'bestvideo[height<=480]+bestaudio/best/best[height<=480]',
                             'merge_output_format': 'mp4',
@@ -81,30 +100,7 @@ def download_youtube(request):
                                 '-ac', '2'
                             ],
                             'quiet': True,
-                            'verbose': True,
                             'noplaylist': True,
-                            'user_agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
-                                        '(KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36',
-                        }
-                    elif '720' in action:
-                        ydl_opts = {
-                            'quiet': True,
-                            'verbose': True,
-                            'noplaylist': True,
-                            'format': 'bestvideo[height<=720]+bestaudio/best',  # download 720p video
-                            'merge_output_format': 'mp4',
-                            'outtmpl': output_template,
-                            'user_agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
-                                        '(KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36',
-                        }
-                    else:
-                        ydl_opts = {
-                            'quiet': True, 
-                            'verbose': True,
-                            'noplaylist': True,
-                            'format': 'bestvideo[height<=1080]+bestaudio/best', #download 1080p HD video
-                            'merge_output_format': 'mp4',
-                            'outtmpl': output_template,
                             'user_agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
                                         '(KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36',
                         }
